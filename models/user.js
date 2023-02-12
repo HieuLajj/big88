@@ -15,14 +15,6 @@ const userSchema = new mongoose.Schema({
     lose:{
         type: Number,
     },
-    followers:{
-        type: Array,
-        default:[]
-    },
-    followins:{
-        type: Array,
-        default:[]
-    },
     addresswallet:{
         type: String,
     }
