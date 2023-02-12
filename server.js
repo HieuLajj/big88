@@ -4,6 +4,8 @@ app.use(express.static("public"));
 app.set("view engine", "ejs");
 app.set("views", "./views");
 app.use("/scripts", express.static(__dirname+"/node_modules/web3.js-browser/build/"))
+var bodyParser = require("body-parser");
+app.use(bodyParser.urlencoded({extended:false}));
 var server = require("http").Server(app);
 var io = require("socket.io")(server);
 server.listen(3000);
@@ -28,66 +30,94 @@ io.on("connection", function(socket){
     });
 });
 
-var bodyParser = require("body-parser");
-app.use(bodyParser.urlencoded({extended:false}));
-require("./controllers/game")(app);
+const userRoute = require('./routes/user_router');
+app.use("/laihieu/user",userRoute);
 
-// var currentRoundNumber = null;
 
-// var Round = require("./models/Round");
-// function createdNewRound(){
-//     var newRound = new Round({
-//         small_money: 1000,
-//         small_players: 0,
-//         big_money: 500,
-//         big_players: 10,
-//         counter : 1,
-//         result: -1,
-//         dateCreated: Date.now()
-//     });
-//     newRound.save(function(e){
-//         if(!e){
-//             console.log("new round created: " + newRound.roundNumber)
-//             currentRoundNumber = newRound.roundNumber;
-//             roundCounter(currentRoundNumber);
-//         }else{
-//            currentRoundNumber = null;
-//         }
-//     })
-// }
-// function roundCounter(roundNo){
-//     Round.findOne({roundNumber : roundNo}, function(e, round){
-//         if(!e && round != null){
-//             if(round.counter < 5){
-//                 round.counter++;
-//                 round.small_money += Math.floor(Math.random() * 1000000);
-//                 round.big_money += Math.floor(Math.random() * 1000000);
-//                 console.log("current" + roundNo + ", count" + round.counter)
-//                 round.save((eSave)=>{
-//                     io.sockets.emit("server-send-current-round", JSON.stringify(round));
-//                     setTimeout(()=>{
-//                         roundCounter(roundNo)
-//                     }, 1000)
-//                 });
-//             }else{
-//                 console.log("het gio");
-//                 round.result = Math.floor(Math.random() * 2);
-//                 if(!round.result == 0){
-//                     round.dice = Math.floor(Math.random()*3) + 1;
-//                 }else{
-//                     round.dice = Math.floor(Math.random()* 3) + 4;
-//                 }
-//                 round.save((eSave)=>{
-//                     console.log("winner is:" + round.result);
-//                     setTimeout(()=>{
-//                         createdNewRound();
-//                     }, 1000);
-//                 })
+//require("./controllers/game")(app);
+// var Web3 = require("Web3");
+// var web3 = new Web3(new Web3.providers.HttpProvider("https://goerli.infura.io/v3/"));
+
+// app.post("/verifyHash", function(req,res){
+//    if(!req.body.random || !req.body.hash){
+//         res.send("failed");
+//    }else{
+//         let account = web3.eth.accounts.recover(req.body.random, req.body.hash);
+//         res.send(account);
+//    } 
+// });
+
+// const Web3 = require('web3');
+// const web3 = new Web3("https://goerli.infura.io/v3/89b400afdacf4e07979a7d55976451c1");
+// web3.eth.accounts.wallet.add("ab421cb7dfb40d8a7056255a815a8f4cbe33eeeb855a8c3fe89c991ffc6cf496");
+// const abi = [
+//     {
+//         "inputs": [],
+//         "name": "claim_tolenXU",
+//         "outputs": [],
+//         "stateMutability": "nonpayable",
+//         "type": "function"
+//     },
+//     {
+//         "inputs": [
+//             {
+//                 "internalType": "address",
+//                 "name": "_tokenXu",
+//                 "type": "address"
 //             }
-//         }else{
-
-//         }
-//     })
-// }
-
-// createdNewRound();
+//         ],
+//         "stateMutability": "nonpayable",
+//         "type": "constructor"
+//     },
+//     {
+//         "anonymous": false,
+//         "inputs": [
+//             {
+//                 "indexed": false,
+//                 "internalType": "address",
+//                 "name": "_vi",
+//                 "type": "address"
+//             }
+//         ],
+//         "name": "SM_ban_data",
+//         "type": "event"
+//     },
+//     {
+//         "inputs": [],
+//         "name": "amount",
+//         "outputs": [
+//             {
+//                 "internalType": "uint256",
+//                 "name": "",
+//                 "type": "uint256"
+//             }
+//         ],
+//         "stateMutability": "view",
+//         "type": "function"
+//     },
+//     {
+//         "inputs": [],
+//         "name": "tokenXU",
+//         "outputs": [
+//             {
+//                 "internalType": "contract IERC20",
+//                 "name": "",
+//                 "type": "address"
+//             }
+//         ],
+//         "stateMutability": "view",
+//         "type": "function"
+//     }
+// ];
+// const addressSM = "0xaFCc915A7943E2cFB01b3D60C1981c3c35B85840";
+// var contract_MM = new web3.eth.Contract(abi,addressSM);
+// sender = "0x91aAA108997BA2540C9aF1c67d4dccB48Fb34f06";
+// const init = async ()=>{
+//     console.log("fddddd2");
+//     contract_MM.methods.claim_tolenXU().send({
+//         from: sender,
+//         gas: 72000
+//     });
+//     console.log("fddddd");
+// }   
+//  init();
