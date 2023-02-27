@@ -2,13 +2,15 @@ const User = require("../models/user");
 const userController = {
     userLogin: async(req,res) => {
         const {addresswallet} = req.body;
+        console.log(addresswallet);
         const user = await User.findOne({addresswallet});
         if (!user){
-            return res.json({
-                success: false,
-                message: 'user not found, with the given email!',
-            });
+            return  res.send(JSON.stringify({
+                        success: false,
+                        message: 'user not found, with the given email!',
+                    }))
         }  
+        console.log(user+"hmm");
         res.send(JSON.stringify(user))
     },
 

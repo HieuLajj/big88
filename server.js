@@ -1,9 +1,11 @@
 var express = require("express");
+const cors = require('cors');
 var app = express();
 app.use(express.static("public"));
 app.set("view engine", "ejs");
 app.set("views", "./views");
 app.use("/scripts", express.static(__dirname+"/node_modules/web3.js-browser/build/"))
+app.use(cors());
 var bodyParser = require("body-parser");
 //app.use(bodyParser.urlencoded({extended:false}));
 var server = require("http").Server(app);
@@ -33,8 +35,6 @@ io.on("connection", function(socket){
 
 const userRoute = require('./routes/user_router');
 app.use("/laihieu/user",userRoute);
-
-
 //require("./controllers/game")(app);
 // var Web3 = require("Web3");
 // var web3 = new Web3(new Web3.providers.HttpProvider("https://goerli.infura.io/v3/"));
