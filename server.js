@@ -5,11 +5,22 @@ app.use(express.static("public"));
 app.set("view engine", "ejs");
 app.set("views", "./views");
 app.use("/scripts", express.static(__dirname+"/node_modules/web3.js-browser/build/"))
+const corsOptions = {
+    optionsSuccessStatus: 200, // For legacy browser support
+    credentials: true, // This is important.
+    origin: "https://chalkcoin.io",
+};
 app.use(cors());
 var bodyParser = require("body-parser");
 //app.use(bodyParser.urlencoded({extended:false}));
 var server = require("http").Server(app);
-var io = require("socket.io")(server);
+var io = require("socket.io")(server,
+	{cors: {
+		origin: '*',
+		credentials: true
+	}
+	}
+);
 server.listen(3000);
 app.use(bodyParser.json({limit:"50mb"}));
 app.use(bodyParser.urlencoded({extended: true}))
@@ -36,223 +47,272 @@ io.on("connection", function(socket){
 const userRoute = require('./routes/user_router');
 app.use("/laihieu/user",userRoute);
 
+//game logic
+
+var Round = require("./models/Round");
+
+var currentRoundNumber = null;
+function createNewRound(){
+	var newRound = new Round({
+		small_money: 0,
+		small_players: 0,
+		big_money: 0,
+		big_players: 0,
+		counter: 0,
+		result: -2,
+		dateCreated : Date.now()
+	});
+	newRound.save(function(e){
+		if(!e){
+			console.log("New round" + newRound.roundNumber);
+			currentRoundNumber = newRound?.roundNumber;
+			roundCounter(currentRoundNumber);
+		}else{
+			currentRoundNumber = null;
+		}
+	})
+}
+function roundCounter(roundNu){
+	Round.findOne({roundNumber : roundNu}, function(e, round){
+		if(!e && round != null){
+			if(round.counter < 60){
+				round.counter++;
+				console.log(roundNu + "::"+ round.counter);
+				round.save((e)=>{
+					io.sockets.emit("server-send-current-round", JSON.stringify(round));
+					setTimeout(()=>{
+						roundCounter(roundNu);
+					},1000)
+				});
+			}else{
+				console.log("het gio roi");
+				setTimeout(()=>{createNewRound();}, 1000)
+			}
+		}else{
+
+		}
+	});
+}
+createNewRound();
+
+
 
 // smart contract 
 
-var Web3 = require("Web3");
-const abi =[
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "_amountTokenGuess",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_guess",
-				"type": "uint256"
-			}
-		],
-		"name": "bet",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "claim_tokenXU",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "play",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "pushArray",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "_token",
-				"type": "address"
-			}
-		],
-		"stateMutability": "nonpayable",
-		"type": "constructor"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": false,
-				"internalType": "address",
-				"name": "_vi",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"internalType": "string",
-				"name": "_id",
-				"type": "string"
-			}
-		],
-		"name": "SM_start_game",
-		"type": "event"
-	},
-	{
-		"inputs": [],
-		"name": "xoaarrya",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "amount",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"name": "arraytest",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "owner",
-		"outputs": [
-			{
-				"internalType": "address payable",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"name": "playerBet",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "amountTokenGuess",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "guess",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"name": "stakerAddressList",
-		"outputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "tokenXU",
-		"outputs": [
-			{
-				"internalType": "contract IERC20",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"name": "usersClaimed",
-		"outputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	}
-];
-const addressSM = "0xAA5d9f31A5A5CdE29dD6D707919e10b9C1BBbCDe";
-const web3 = new Web3();
-var contract_MM = new web3.eth.Contract(abi,addressSM);
-var provider = new Web3.providers.WebsocketProvider("https://polygon-mumbai.infura.io/v3/991344f63cdf417f98677aa8aea0ee11")
-var web3_infura = new Web3(provider);
-var contract_Infura = new web3_infura.eth.Contract(abi, addressSM);
-console.log(contract_Infura);
-contract_Infura.events.SM_start_game({fillter:{}, fromBlock:"latest"}, function(error, event){
-    if(error){
-        console.log("fhasdhf");
-        console.log(error);
-    }else{
-        console.log(event);
-    }
-});
+// var Web3 = require("Web3");
+// const abi =[
+// 	{
+// 		"inputs": [
+// 			{
+// 				"internalType": "uint256",
+// 				"name": "_amountTokenGuess",
+// 				"type": "uint256"
+// 			},
+// 			{
+// 				"internalType": "uint256",
+// 				"name": "_guess",
+// 				"type": "uint256"
+// 			}
+// 		],
+// 		"name": "bet",
+// 		"outputs": [],
+// 		"stateMutability": "nonpayable",
+// 		"type": "function"
+// 	},
+// 	{
+// 		"inputs": [],
+// 		"name": "claim_tokenXU",
+// 		"outputs": [],
+// 		"stateMutability": "nonpayable",
+// 		"type": "function"
+// 	},
+// 	{
+// 		"inputs": [],
+// 		"name": "play",
+// 		"outputs": [],
+// 		"stateMutability": "nonpayable",
+// 		"type": "function"
+// 	},
+// 	{
+// 		"inputs": [],
+// 		"name": "pushArray",
+// 		"outputs": [],
+// 		"stateMutability": "nonpayable",
+// 		"type": "function"
+// 	},
+// 	{
+// 		"inputs": [
+// 			{
+// 				"internalType": "address",
+// 				"name": "_token",
+// 				"type": "address"
+// 			}
+// 		],
+// 		"stateMutability": "nonpayable",
+// 		"type": "constructor"
+// 	},
+// 	{
+// 		"anonymous": false,
+// 		"inputs": [
+// 			{
+// 				"indexed": false,
+// 				"internalType": "address",
+// 				"name": "_vi",
+// 				"type": "address"
+// 			},
+// 			{
+// 				"indexed": false,
+// 				"internalType": "string",
+// 				"name": "_id",
+// 				"type": "string"
+// 			}
+// 		],
+// 		"name": "SM_start_game",
+// 		"type": "event"
+// 	},
+// 	{
+// 		"inputs": [],
+// 		"name": "xoaarrya",
+// 		"outputs": [],
+// 		"stateMutability": "nonpayable",
+// 		"type": "function"
+// 	},
+// 	{
+// 		"inputs": [],
+// 		"name": "amount",
+// 		"outputs": [
+// 			{
+// 				"internalType": "uint256",
+// 				"name": "",
+// 				"type": "uint256"
+// 			}
+// 		],
+// 		"stateMutability": "view",
+// 		"type": "function"
+// 	},
+// 	{
+// 		"inputs": [
+// 			{
+// 				"internalType": "uint256",
+// 				"name": "",
+// 				"type": "uint256"
+// 			}
+// 		],
+// 		"name": "arraytest",
+// 		"outputs": [
+// 			{
+// 				"internalType": "uint256",
+// 				"name": "",
+// 				"type": "uint256"
+// 			}
+// 		],
+// 		"stateMutability": "view",
+// 		"type": "function"
+// 	},
+// 	{
+// 		"inputs": [],
+// 		"name": "owner",
+// 		"outputs": [
+// 			{
+// 				"internalType": "address payable",
+// 				"name": "",
+// 				"type": "address"
+// 			}
+// 		],
+// 		"stateMutability": "view",
+// 		"type": "function"
+// 	},
+// 	{
+// 		"inputs": [
+// 			{
+// 				"internalType": "address",
+// 				"name": "",
+// 				"type": "address"
+// 			}
+// 		],
+// 		"name": "playerBet",
+// 		"outputs": [
+// 			{
+// 				"internalType": "uint256",
+// 				"name": "amountTokenGuess",
+// 				"type": "uint256"
+// 			},
+// 			{
+// 				"internalType": "uint256",
+// 				"name": "guess",
+// 				"type": "uint256"
+// 			}
+// 		],
+// 		"stateMutability": "view",
+// 		"type": "function"
+// 	},
+// 	{
+// 		"inputs": [
+// 			{
+// 				"internalType": "uint256",
+// 				"name": "",
+// 				"type": "uint256"
+// 			}
+// 		],
+// 		"name": "stakerAddressList",
+// 		"outputs": [
+// 			{
+// 				"internalType": "address",
+// 				"name": "",
+// 				"type": "address"
+// 			}
+// 		],
+// 		"stateMutability": "view",
+// 		"type": "function"
+// 	},
+// 	{
+// 		"inputs": [],
+// 		"name": "tokenXU",
+// 		"outputs": [
+// 			{
+// 				"internalType": "contract IERC20",
+// 				"name": "",
+// 				"type": "address"
+// 			}
+// 		],
+// 		"stateMutability": "view",
+// 		"type": "function"
+// 	},
+// 	{
+// 		"inputs": [
+// 			{
+// 				"internalType": "uint256",
+// 				"name": "",
+// 				"type": "uint256"
+// 			}
+// 		],
+// 		"name": "usersClaimed",
+// 		"outputs": [
+// 			{
+// 				"internalType": "address",
+// 				"name": "",
+// 				"type": "address"
+// 			}
+// 		],
+// 		"stateMutability": "view",
+// 		"type": "function"
+// 	}
+// ];
+// const addressSM = "0xAA5d9f31A5A5CdE29dD6D707919e10b9C1BBbCDe";
+// const web3 = new Web3();
+// var contract_MM = new web3.eth.Contract(abi,addressSM);
+// var provider = new Web3.providers.WebsocketProvider("https://polygon-mumbai.infura.io/v3/991344f63cdf417f98677aa8aea0ee11")
+// var web3_infura = new Web3(provider);
+// var contract_Infura = new web3_infura.eth.Contract(abi, addressSM);
+// console.log(contract_Infura);
+// contract_Infura.events.SM_start_game({fillter:{}, fromBlock:"latest"}, function(error, event){
+//     if(error){
+//         console.log("fhasdhf");
+//         console.log(error);
+//     }else{
+//         console.log(event);
+//     }
+// });
 
 
 
