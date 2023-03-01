@@ -60,6 +60,8 @@ function createNewRound(){
 		big_players: 0,
 		counter: 0,
 		result: -2,
+		state_game: 0,
+		dice: 0,
 		dateCreated : Date.now()
 	});
 	newRound.save(function(e){
@@ -85,8 +87,24 @@ function roundCounter(roundNu){
 					},1000)
 				});
 			}else{
+				round.result = Math.floor(Math.random()*2);
+				if(round.result==0){
+					round.dice = Math.floor(Math.random()*9)+1;
+				}else{
+					round.dice = Math.floor(Math.random()*9)+10;
+				}
+				round.state_game  = 1;
+				round.save((eSave)=>{
+					io.sockets.emit("server-send-current-round", JSON.stringify(round));
+					setTimeout(()=>{
+						round.state_game  = 2;
+						round.save((eSave)=>{
+							io.sockets.emit("server-send-current-round", JSON.stringify(round));
+						});
+					}, 10000)
+					setTimeout(()=>{createNewRound();}, 15000)
+				});
 				console.log("het gio roi");
-				setTimeout(()=>{createNewRound();}, 1000)
 			}
 		}else{
 

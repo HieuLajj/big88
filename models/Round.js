@@ -8,6 +8,8 @@ const roundSchema = new mongoose.Schema({
     big_players: Number,
     counter: Number,
     result: Number,
+    state_game: Number,
+    dice: Number,
     dateCreated : Date
 });
 roundSchema.plugin(AutoIncrement, {inc_field: "roundNumber"});
