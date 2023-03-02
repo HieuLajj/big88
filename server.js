@@ -38,6 +38,11 @@ mongoose.connect('mongodb+srv://hieu:12112000@cluster0.1xwjc.mongodb.net/BIG88?r
 
 io.on("connection", function(socket){
     console.log("new connection: " + socket.id);
+	socket.on('BetPlay', function(data){
+		const obj = JSON.parse(data);
+		console.log(obj.idPlayer+ "thanh cong nay")
+	})
+
 
     socket.on("disconnect", function(){
         console.log(socket.id + "has been disconnected");
@@ -66,7 +71,7 @@ function createNewRound(){
 	});
 	newRound.save(function(e){
 		if(!e){
-			console.log("New round" + newRound.roundNumber);
+			//console.log("New round" + newRound.roundNumber);
 			currentRoundNumber = newRound?.roundNumber;
 			roundCounter(currentRoundNumber);
 		}else{
@@ -79,7 +84,7 @@ function roundCounter(roundNu){
 		if(!e && round != null){
 			if(round.counter < 60){
 				round.counter++;
-				console.log(roundNu + "::"+ round.counter);
+				//console.log(roundNu + "::"+ round.counter);
 				round.save((e)=>{
 					io.sockets.emit("server-send-current-round", JSON.stringify(round));
 					setTimeout(()=>{
@@ -357,77 +362,218 @@ createNewRound();
 //    } 
 // });
 
+
+
 // const Web3 = require('web3');
-// const web3 = new Web3("https://goerli.infura.io/v3/89b400afdacf4e07979a7d55976451c1");
+// const web3 = new Web3("https://polygon-mumbai.infura.io/v3/fecb9acc0c6f4f1693e2d416177b5317");
 // web3.eth.accounts.wallet.add("ab421cb7dfb40d8a7056255a815a8f4cbe33eeeb855a8c3fe89c991ffc6cf496");
-// const abi = [
-//     {
-//         "inputs": [],
-//         "name": "claim_tolenXU",
-//         "outputs": [],
-//         "stateMutability": "nonpayable",
-//         "type": "function"
-//     },
-//     {
-//         "inputs": [
-//             {
-//                 "internalType": "address",
-//                 "name": "_tokenXu",
-//                 "type": "address"
-//             }
-//         ],
-//         "stateMutability": "nonpayable",
-//         "type": "constructor"
-//     },
-//     {
-//         "anonymous": false,
-//         "inputs": [
-//             {
-//                 "indexed": false,
-//                 "internalType": "address",
-//                 "name": "_vi",
-//                 "type": "address"
-//             }
-//         ],
-//         "name": "SM_ban_data",
-//         "type": "event"
-//     },
-//     {
-//         "inputs": [],
-//         "name": "amount",
-//         "outputs": [
-//             {
-//                 "internalType": "uint256",
-//                 "name": "",
-//                 "type": "uint256"
-//             }
-//         ],
-//         "stateMutability": "view",
-//         "type": "function"
-//     },
-//     {
-//         "inputs": [],
-//         "name": "tokenXU",
-//         "outputs": [
-//             {
-//                 "internalType": "contract IERC20",
-//                 "name": "",
-//                 "type": "address"
-//             }
-//         ],
-//         "stateMutability": "view",
-//         "type": "function"
-//     }
+// const abi =[
+// 	{
+// 		"inputs": [
+// 			{
+// 				"internalType": "uint256",
+// 				"name": "_amountTokenGuess",
+// 				"type": "uint256"
+// 			},
+// 			{
+// 				"internalType": "uint256",
+// 				"name": "_guess",
+// 				"type": "uint256"
+// 			}
+// 		],
+// 		"name": "bet",
+// 		"outputs": [],
+// 		"stateMutability": "nonpayable",
+// 		"type": "function"
+// 	},
+// 	{
+// 		"inputs": [],
+// 		"name": "claim_tokenXU",
+// 		"outputs": [],
+// 		"stateMutability": "nonpayable",
+// 		"type": "function"
+// 	},
+// 	{
+// 		"inputs": [],
+// 		"name": "play",
+// 		"outputs": [],
+// 		"stateMutability": "nonpayable",
+// 		"type": "function"
+// 	},
+// 	{
+// 		"inputs": [],
+// 		"name": "pushArray",
+// 		"outputs": [],
+// 		"stateMutability": "nonpayable",
+// 		"type": "function"
+// 	},
+// 	{
+// 		"inputs": [
+// 			{
+// 				"internalType": "address",
+// 				"name": "_token",
+// 				"type": "address"
+// 			}
+// 		],
+// 		"stateMutability": "nonpayable",
+// 		"type": "constructor"
+// 	},
+// 	{
+// 		"anonymous": false,
+// 		"inputs": [
+// 			{
+// 				"indexed": false,
+// 				"internalType": "address",
+// 				"name": "_vi",
+// 				"type": "address"
+// 			},
+// 			{
+// 				"indexed": false,
+// 				"internalType": "string",
+// 				"name": "_id",
+// 				"type": "string"
+// 			}
+// 		],
+// 		"name": "SM_start_game",
+// 		"type": "event"
+// 	},
+// 	{
+// 		"inputs": [],
+// 		"name": "xoaarrya",
+// 		"outputs": [],
+// 		"stateMutability": "nonpayable",
+// 		"type": "function"
+// 	},
+// 	{
+// 		"inputs": [],
+// 		"name": "amount",
+// 		"outputs": [
+// 			{
+// 				"internalType": "uint256",
+// 				"name": "",
+// 				"type": "uint256"
+// 			}
+// 		],
+// 		"stateMutability": "view",
+// 		"type": "function"
+// 	},
+// 	{
+// 		"inputs": [
+// 			{
+// 				"internalType": "uint256",
+// 				"name": "",
+// 				"type": "uint256"
+// 			}
+// 		],
+// 		"name": "arraytest",
+// 		"outputs": [
+// 			{
+// 				"internalType": "uint256",
+// 				"name": "",
+// 				"type": "uint256"
+// 			}
+// 		],
+// 		"stateMutability": "view",
+// 		"type": "function"
+// 	},
+// 	{
+// 		"inputs": [],
+// 		"name": "owner",
+// 		"outputs": [
+// 			{
+// 				"internalType": "address payable",
+// 				"name": "",
+// 				"type": "address"
+// 			}
+// 		],
+// 		"stateMutability": "view",
+// 		"type": "function"
+// 	},
+// 	{
+// 		"inputs": [
+// 			{
+// 				"internalType": "address",
+// 				"name": "",
+// 				"type": "address"
+// 			}
+// 		],
+// 		"name": "playerBet",
+// 		"outputs": [
+// 			{
+// 				"internalType": "uint256",
+// 				"name": "amountTokenGuess",
+// 				"type": "uint256"
+// 			},
+// 			{
+// 				"internalType": "uint256",
+// 				"name": "guess",
+// 				"type": "uint256"
+// 			}
+// 		],
+// 		"stateMutability": "view",
+// 		"type": "function"
+// 	},
+// 	{
+// 		"inputs": [
+// 			{
+// 				"internalType": "uint256",
+// 				"name": "",
+// 				"type": "uint256"
+// 			}
+// 		],
+// 		"name": "stakerAddressList",
+// 		"outputs": [
+// 			{
+// 				"internalType": "address",
+// 				"name": "",
+// 				"type": "address"
+// 			}
+// 		],
+// 		"stateMutability": "view",
+// 		"type": "function"
+// 	},
+// 	{
+// 		"inputs": [],
+// 		"name": "tokenXU",
+// 		"outputs": [
+// 			{
+// 				"internalType": "contract IERC20",
+// 				"name": "",
+// 				"type": "address"
+// 			}
+// 		],
+// 		"stateMutability": "view",
+// 		"type": "function"
+// 	},
+// 	{
+// 		"inputs": [
+// 			{
+// 				"internalType": "uint256",
+// 				"name": "",
+// 				"type": "uint256"
+// 			}
+// 		],
+// 		"name": "usersClaimed",
+// 		"outputs": [
+// 			{
+// 				"internalType": "address",
+// 				"name": "",
+// 				"type": "address"
+// 			}
+// 		],
+// 		"stateMutability": "view",
+// 		"type": "function"
+// 	}
 // ];
-// const addressSM = "0xaFCc915A7943E2cFB01b3D60C1981c3c35B85840";
+// const addressSM = "0xAA5d9f31A5A5CdE29dD6D707919e10b9C1BBbCDe";
 // var contract_MM = new web3.eth.Contract(abi,addressSM);
 // sender = "0x91aAA108997BA2540C9aF1c67d4dccB48Fb34f06";
 // const init = async ()=>{
 //     console.log("fddddd2");
-//     contract_MM.methods.claim_tolenXU().send({
+//     contract_MM.methods.play().send({
 //         from: sender,
 //         gas: 72000
 //     });
 //     console.log("fddddd");
 // }   
-//  init();
+// init();
