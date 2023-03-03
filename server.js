@@ -37,18 +37,25 @@ mongoose.connect('mongodb+srv://hieu:12112000@cluster0.1xwjc.mongodb.net/BIG88?r
 
 var betPlayer = 0;
 var betedPlayer = 0;
+var betRandomNumber = -1;
+var stateGameCurrent = 0;
+
+
 io.on("connection", function(socket){
     console.log("new connection: " + socket.id);
 	socket.on('BetPlay', function(data){
 		// const obj = JSON.parse(data);
-		// console.log(obj.idPlayer+ "thanh cong nay")
-		betPlayer++;
+		//if(stateGameCurrent == 0){
+			betPlayer++;
+			console.log("nhan betplay"+betPlayer)
+		//}
 	})
 
 	socket.on('BetedPlay', function(data){
 		// const obj = JSON.parse(data);
 		// console.log(obj.idPlayer+ "thanh cong nay")
 		betedPlayer++;
+		console.log("nhan betedplay"+betedPlayer)
 	})
 
 
@@ -66,6 +73,11 @@ var Round = require("./models/Round");
 
 var currentRoundNumber = null;
 function createNewRound(){
+	betPlayer = 0;
+	betedPlayer = 0;
+	betRandomNumber = -1;
+	stateGameCurrent = 0;
+
 	var newRound = new Round({
 		small_money: 0,
 		small_players: 0,
@@ -101,6 +113,7 @@ function roundCounter(roundNu){
 				});
 			}else{
 				if(betPlayer==0){
+					console.log("khong co polygon");
 					round.result = Math.floor(Math.random()*2);
 					if(round.result==0){
 						round.dice = Math.floor(Math.random()*9)+1;
@@ -108,10 +121,12 @@ function roundCounter(roundNu){
 						round.dice = Math.floor(Math.random()*9)+10;
 					}
 					round.state_game  = 1;
+					stateGameCurrent = round.state_game;
 					round.save((eSave)=>{
 						io.sockets.emit("server-send-current-round", JSON.stringify(round));
 						setTimeout(()=>{
 							round.state_game  = 2;
+							stateGameCurrent = round.state_game;
 							round.save((eSave)=>{
 								io.sockets.emit("server-send-current-round", JSON.stringify(round));
 							});
@@ -120,33 +135,45 @@ function roundCounter(roundNu){
 					});
 					console.log("het gio roi khong polygon");
 				}else if(betPlayer == betedPlayer && betedPlayer!=0){
-					initBetPlay();
-				}
-				round.result = Math.floor(Math.random()*2);
-				if(round.result==0){
-					round.dice = Math.floor(Math.random()*9)+1;
+					initBetPlay(round);
 				}else{
-					round.dice = Math.floor(Math.random()*9)+10;
-				}
-				round.state_game  = 1;
-				round.save((eSave)=>{
-					io.sockets.emit("server-send-current-round", JSON.stringify(round));
-					setTimeout(()=>{
-						round.state_game  = 2;
-						round.save((eSave)=>{
-							io.sockets.emit("server-send-current-round", JSON.stringify(round));
+					if(round.counter < 120){
+						round.counter++;
+						round.save((e)=>{
+							setTimeout(()=>{
+								roundCounter(roundNu);
+							},1000)
 						});
-					}, 10000)
-					setTimeout(()=>{createNewRound();}, 15000)
-				});
-				console.log("het gio roi");
+					}else{
+						initBetPlay(round);
+					}
+				}
+
+				// round.result = Math.floor(Math.random()*2);
+				// if(round.result==0){
+				// 	round.dice = Math.floor(Math.random()*9)+1;
+				// }else{
+				// 	round.dice = Math.floor(Math.random()*9)+10;
+				// }
+				// round.state_game  = 1;
+				// round.save((eSave)=>{
+				// 	io.sockets.emit("server-send-current-round", JSON.stringify(round));
+				// 	setTimeout(()=>{
+				// 		round.state_game  = 2;
+				// 		round.save((eSave)=>{
+				// 			io.sockets.emit("server-send-current-round", JSON.stringify(round));
+				// 		});
+				// 	}, 10000)
+				// 	setTimeout(()=>{createNewRound();}, 15000)
+				// });
+				// console.log("het gio roi");
 			}
 		}else{
 
 		}
 	});
 }
-//createNewRound();
+createNewRound();
 
 
 
@@ -414,18 +441,12 @@ const abi =[
 		"inputs": [
 			{
 				"indexed": false,
-				"internalType": "address",
-				"name": "_vi",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"internalType": "string",
-				"name": "_id",
-				"type": "string"
+				"internalType": "uint256",
+				"name": "betNumber",
+				"type": "uint256"
 			}
 		],
-		"name": "SMdataHieu",
+		"name": "SMdataBetNumber",
 		"type": "event"
 	},
 	{
@@ -595,17 +616,20 @@ const abi =[
 		"type": "function"
 	}
 ]
-const addressSM = "0x32497562d667c985508403375863AC692064Bf88";
+const addressSM = "0xAa7D1E308BaA9663588ABd9457fDBf7Fb5482a71";
 //test
+
+
 
 var provider = new Web3.providers.WebsocketProvider("wss://polygon-mumbai.g.alchemy.com/v2/vdDFGGiobeIX1sP8w7cPnMWzzlm1dGrG");
 var web3_alchemy = new Web3(provider);
 var contract_Alchemy = new web3_alchemy.eth.Contract(abi,addressSM);
-contract_Alchemy.events.SMdataHieu({filter:{}, fromBlock:"latest"}, function(error,event){
+contract_Alchemy.events.SMdataBetNumber({filter:{}, fromBlock:"latest"}, function(error,event){
 	if(error){
 		console.log("loi roi"+ error)
 	}else{
-		console.log(JSON.stringify(event)+"thanh cong roi")
+		betRandomNumber = event.returnValues.betNumber;
+		console.log("hehe"+event.returnValues.betNumber+"thanh cong roi")
 	}
 })
 
@@ -614,13 +638,31 @@ web3.eth.accounts.wallet.add("ab421cb7dfb40d8a7056255a815a8f4cbe33eeeb855a8c3fe8
 var contract_MM = new web3.eth.Contract(abi,addressSM);
 
 sender = "0x91aAA108997BA2540C9aF1c67d4dccB48Fb34f06";
-const initBetPlay = async ()=>{
+const initBetPlay = async (round)=>{
     console.log("fddddd2");
+	round.state_game  = 1;
+	stateGameCurrent = round.state_game;
+	round.save((eSave)=>{
+		io.sockets.emit("server-send-current-round", JSON.stringify(round));
+	})
    	var data = await contract_MM.methods.play().send({
         from: sender,
         gas: 72000
     });
-    console.log("fdddddeeee");
+	round.result = betRandomNumber;
+	console.log("????");
+	if(round.result==0){
+		round.dice = Math.floor(Math.random()*9)+1;
+	}else{
+		round.dice = Math.floor(Math.random()*9)+10;
+	}
+	round.state_game  = 2;
+	stateGameCurrent = round.state_game;
+	round.save((eSave)=>{
+		io.sockets.emit("server-send-current-round", JSON.stringify(round));
+	});
+	setTimeout(()=>{createNewRound();}, 5000)
+    console.log("fdddddeeee==hoanthanh");
 }   
-initBetPlay();
+//initBetPlay();
 
