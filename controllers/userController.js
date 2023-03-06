@@ -24,7 +24,8 @@ const userController = {
                 addresswallet 
             })
             await user.save();
-            res.json(user);
+            res.send(JSON.stringify(user))
+            //res.json(user);
         }
 }
 module.exports = userController;

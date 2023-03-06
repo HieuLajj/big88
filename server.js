@@ -58,6 +58,10 @@ io.on("connection", function(socket){
 		console.log("nhan betedplay"+betedPlayer)
 	})
 
+	socket.on('ChatCommunity', function(data){
+		console.log(JSON.stringify(data));
+	})
+
 
     socket.on("disconnect", function(){
         console.log(socket.id + "has been disconnected");
@@ -645,6 +649,7 @@ const initBetPlay = async (round)=>{
 	round.save((eSave)=>{
 		io.sockets.emit("server-send-current-round", JSON.stringify(round));
 	})
+	console.log("ooo");
    	var data = await contract_MM.methods.play().send({
         from: sender,
         gas: 72000
