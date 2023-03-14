@@ -5,6 +5,7 @@ app.use(express.static("public"));
 app.set("view engine", "ejs");
 app.set("views", "./views");
 app.use("/scripts", express.static(__dirname+"/node_modules/web3.js-browser/build/"))
+let ChatServer = require("./classes/ChatServer");
 const corsOptions = {
     optionsSuccessStatus: 200, // For legacy browser support
     credentials: true, // This is important.
@@ -21,7 +22,7 @@ var io = require("socket.io")(server,
 	}
 	}
 );
-server.listen(3000);
+server.listen(8000);
 app.use(bodyParser.json({limit:"50mb"}));
 app.use(bodyParser.urlencoded({extended: true}))
 // connect moongose
@@ -40,7 +41,7 @@ var betedPlayer = 0;
 var betRandomNumber = -1;
 var stateGameCurrent = 0;
 
-
+let chatServer = new ChatServer();
 io.on("connection", function(socket){
     console.log("new connection: " + socket.id);
 	socket.on('BetPlay', function(data){
@@ -58,10 +59,14 @@ io.on("connection", function(socket){
 		console.log("nhan betedplay"+betedPlayer)
 	})
 
-	socket.on('ChatCommunity', function(data){
-		console.log(JSON.stringify(data));
-	})
-
+	// socket.on('ChatCommunity', function(data){
+	// 	console.log(JSON.stringify(data));
+	// })
+	//chat
+	let serverChat = chatServer;
+	chatServer.socket = socket;
+	chatServer.createEvents(); 
+	
 
     socket.on("disconnect", function(){
         console.log(socket.id + "has been disconnected");
@@ -69,8 +74,9 @@ io.on("connection", function(socket){
 });
 
 const userRoute = require('./routes/user_router');
+const chatRoute = require('./routes/user_chat');
 app.use("/laihieu/user",userRoute);
-
+app.use("/laihieu/chat",chatRoute);
 //game logic
 
 var Round = require("./models/Round");
@@ -177,7 +183,7 @@ function roundCounter(roundNu){
 		}
 	});
 }
-createNewRound();
+//createNewRound();
 
 
 
