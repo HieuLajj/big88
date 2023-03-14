@@ -18,6 +18,7 @@ module.exports = class ChatServer{
                     console.log("luu thanh cong");
                 }
             })
+            socket.broadcast.emit('ReChatCommunity',data);
         })
     }
 }
