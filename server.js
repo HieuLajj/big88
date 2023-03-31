@@ -6,11 +6,11 @@ app.set("view engine", "ejs");
 app.set("views", "./views");
 app.use("/scripts", express.static(__dirname+"/node_modules/web3.js-browser/build/"))
 let ChatServer = require("./classes/ChatServer");
-const corsOptions = {
-    optionsSuccessStatus: 200, // For legacy browser support
-    credentials: true, // This is important.
-    origin: "https://chalkcoin.io",
-};
+// const corsOptions = {
+//     optionsSuccessStatus: 200, // For legacy browser support
+//     credentials: true, // This is important.
+//     origin: "https://chalkcoin.io",
+// };
 app.use(cors());
 var bodyParser = require("body-parser");
 //app.use(bodyParser.urlencoded({extended:false}));
@@ -40,6 +40,10 @@ var betPlayer = 0;
 var betedPlayer = 0;
 var betRandomNumber = -1;
 var stateGameCurrent = 0;
+var small_money_flag = 0;
+var small_players_flag = 0;
+var big_money_flag = 0;
+var big_players_flag = 0;
 
 let chatServer = new ChatServer();
 io.on("connection", function(socket){
@@ -53,10 +57,17 @@ io.on("connection", function(socket){
 	})
 
 	socket.on('BetedPlay', function(data){
-		// const obj = JSON.parse(data);
+		const obj = JSON.parse(data);
 		// console.log(obj.idPlayer+ "thanh cong nay")
 		betedPlayer++;
-		console.log("nhan betedplay"+betedPlayer)
+		//console.log(data+"__"+obj._id+"nhan betedplay"+obj.money)
+		if(obj.bet){
+			big_players_flag++;
+			big_money_flag+=obj.money;
+		}else{
+			small_players_flag++;
+			small_money_flag+=obj.money;
+		}
 	})
 
 	// socket.on('ChatCommunity', function(data){
@@ -87,6 +98,10 @@ function createNewRound(){
 	betedPlayer = 0;
 	betRandomNumber = -1;
 	stateGameCurrent = 0;
+	small_money_flag = 0;
+    small_players_flag = 0;
+    big_money_flag = 0;
+    big_players_flag = 0;
 
 	var newRound = new Round({
 		small_money: 0,
@@ -111,10 +126,15 @@ function createNewRound(){
 }
 function roundCounter(roundNu){
 	Round.findOne({roundNumber : roundNu}, function(e, round){
+		//console.log(round);
 		if(!e && round != null){
+			round.big_money = big_money_flag;
+			round.small_money = small_money_flag;
+			round.big_players = big_players_flag;
+			round.small_players = small_players_flag;
+
 			if(round.counter < 60){
 				round.counter++;
-				//console.log(roundNu + "::"+ round.counter);
 				round.save((e)=>{
 					io.sockets.emit("server-send-current-round", JSON.stringify(round));
 					setTimeout(()=>{
@@ -143,17 +163,18 @@ function roundCounter(roundNu){
 						}, 10000)
 						setTimeout(()=>{createNewRound();}, 15000)
 					});
-					console.log("het gio roi khong polygon");
 				}else if(betPlayer == betedPlayer && betedPlayer!=0){
 					initBetPlay(round);
 				}else{
-					if(round.counter < 120){
+					if(round.counter < 70){
+						round.state_game  = 1;
 						round.counter++;
 						round.save((e)=>{
+							io.sockets.emit("server-send-current-round", JSON.stringify(round));
 							setTimeout(()=>{
 								roundCounter(roundNu);
 							},1000)
-						});
+						});			
 					}else{
 						initBetPlay(round);
 					}
@@ -183,257 +204,9 @@ function roundCounter(roundNu){
 		}
 	});
 }
-//createNewRound();
-
-
-
-// smart contract 
-
-// var Web3 = require("Web3");
-// const abi =[
-// 	{
-// 		"inputs": [
-// 			{
-// 				"internalType": "uint256",
-// 				"name": "_amountTokenGuess",
-// 				"type": "uint256"
-// 			},
-// 			{
-// 				"internalType": "uint256",
-// 				"name": "_guess",
-// 				"type": "uint256"
-// 			}
-// 		],
-// 		"name": "bet",
-// 		"outputs": [],
-// 		"stateMutability": "nonpayable",
-// 		"type": "function"
-// 	},
-// 	{
-// 		"inputs": [],
-// 		"name": "claim_tokenXU",
-// 		"outputs": [],
-// 		"stateMutability": "nonpayable",
-// 		"type": "function"
-// 	},
-// 	{
-// 		"inputs": [],
-// 		"name": "play",
-// 		"outputs": [],
-// 		"stateMutability": "nonpayable",
-// 		"type": "function"
-// 	},
-// 	{
-// 		"inputs": [],
-// 		"name": "pushArray",
-// 		"outputs": [],
-// 		"stateMutability": "nonpayable",
-// 		"type": "function"
-// 	},
-// 	{
-// 		"inputs": [
-// 			{
-// 				"internalType": "address",
-// 				"name": "_token",
-// 				"type": "address"
-// 			}
-// 		],
-// 		"stateMutability": "nonpayable",
-// 		"type": "constructor"
-// 	},
-// 	{
-// 		"anonymous": false,
-// 		"inputs": [
-// 			{
-// 				"indexed": false,
-// 				"internalType": "address",
-// 				"name": "_vi",
-// 				"type": "address"
-// 			},
-// 			{
-// 				"indexed": false,
-// 				"internalType": "string",
-// 				"name": "_id",
-// 				"type": "string"
-// 			}
-// 		],
-// 		"name": "SM_start_game",
-// 		"type": "event"
-// 	},
-// 	{
-// 		"inputs": [],
-// 		"name": "xoaarrya",
-// 		"outputs": [],
-// 		"stateMutability": "nonpayable",
-// 		"type": "function"
-// 	},
-// 	{
-// 		"inputs": [],
-// 		"name": "amount",
-// 		"outputs": [
-// 			{
-// 				"internalType": "uint256",
-// 				"name": "",
-// 				"type": "uint256"
-// 			}
-// 		],
-// 		"stateMutability": "view",
-// 		"type": "function"
-// 	},
-// 	{
-// 		"inputs": [
-// 			{
-// 				"internalType": "uint256",
-// 				"name": "",
-// 				"type": "uint256"
-// 			}
-// 		],
-// 		"name": "arraytest",
-// 		"outputs": [
-// 			{
-// 				"internalType": "uint256",
-// 				"name": "",
-// 				"type": "uint256"
-// 			}
-// 		],
-// 		"stateMutability": "view",
-// 		"type": "function"
-// 	},
-// 	{
-// 		"inputs": [],
-// 		"name": "owner",
-// 		"outputs": [
-// 			{
-// 				"internalType": "address payable",
-// 				"name": "",
-// 				"type": "address"
-// 			}
-// 		],
-// 		"stateMutability": "view",
-// 		"type": "function"
-// 	},
-// 	{
-// 		"inputs": [
-// 			{
-// 				"internalType": "address",
-// 				"name": "",
-// 				"type": "address"
-// 			}
-// 		],
-// 		"name": "playerBet",
-// 		"outputs": [
-// 			{
-// 				"internalType": "uint256",
-// 				"name": "amountTokenGuess",
-// 				"type": "uint256"
-// 			},
-// 			{
-// 				"internalType": "uint256",
-// 				"name": "guess",
-// 				"type": "uint256"
-// 			}
-// 		],
-// 		"stateMutability": "view",
-// 		"type": "function"
-// 	},
-// 	{
-// 		"inputs": [
-// 			{
-// 				"internalType": "uint256",
-// 				"name": "",
-// 				"type": "uint256"
-// 			}
-// 		],
-// 		"name": "stakerAddressList",
-// 		"outputs": [
-// 			{
-// 				"internalType": "address",
-// 				"name": "",
-// 				"type": "address"
-// 			}
-// 		],
-// 		"stateMutability": "view",
-// 		"type": "function"
-// 	},
-// 	{
-// 		"inputs": [],
-// 		"name": "tokenXU",
-// 		"outputs": [
-// 			{
-// 				"internalType": "contract IERC20",
-// 				"name": "",
-// 				"type": "address"
-// 			}
-// 		],
-// 		"stateMutability": "view",
-// 		"type": "function"
-// 	},
-// 	{
-// 		"inputs": [
-// 			{
-// 				"internalType": "uint256",
-// 				"name": "",
-// 				"type": "uint256"
-// 			}
-// 		],
-// 		"name": "usersClaimed",
-// 		"outputs": [
-// 			{
-// 				"internalType": "address",
-// 				"name": "",
-// 				"type": "address"
-// 			}
-// 		],
-// 		"stateMutability": "view",
-// 		"type": "function"
-// 	}
-// ];
-// const addressSM = "0xAA5d9f31A5A5CdE29dD6D707919e10b9C1BBbCDe";
-// const web3 = new Web3();
-// var contract_MM = new web3.eth.Contract(abi,addressSM);
-// var provider = new Web3.providers.WebsocketProvider("https://polygon-mumbai.infura.io/v3/fecb9acc0c6f4f1693e2d416177b5317")
-// var web3_infura = new Web3(provider);
-// var contract_Infura = new web3_infura.eth.Contract(abi, addressSM);
-// console.log(contract_Infura);
-// contract_Infura.events.SM_start_game({fillter:{}, fromBlock:"latest"}, function(error, event){
-//     if(error){
-//         console.log("fhasdhf");
-//         console.log(error);
-//     }else{
-//         console.log(event);
-//     }
-// });
-
-
-
-
-
-
-
-
-
-
-
-
-
-//require("./controllers/game")(app);
-// var Web3 = require("Web3");
-// var web3 = new Web3(new Web3.providers.HttpProvider("https://goerli.infura.io/v3/"));
-
-// app.post("/verifyHash", function(req,res){
-//    if(!req.body.random || !req.body.hash){
-//         res.send("failed");
-//    }else{
-//         let account = web3.eth.accounts.recover(req.body.random, req.body.hash);
-//         res.send(account);
-//    } 
-// });
-
-
+createNewRound();
 
 const Web3 = require('web3');
-
-//const web3 = new Web3("https://polygon-mumbai.infura.io/v3/fecb9acc0c6f4f1693e2d416177b5317");
 const abi =[
 	{
 		"inputs": [
@@ -627,10 +400,6 @@ const abi =[
 	}
 ]
 const addressSM = "0xAa7D1E308BaA9663588ABd9457fDBf7Fb5482a71";
-//test
-
-
-
 var provider = new Web3.providers.WebsocketProvider("wss://polygon-mumbai.g.alchemy.com/v2/vdDFGGiobeIX1sP8w7cPnMWzzlm1dGrG");
 var web3_alchemy = new Web3(provider);
 var contract_Alchemy = new web3_alchemy.eth.Contract(abi,addressSM);
@@ -639,7 +408,7 @@ contract_Alchemy.events.SMdataBetNumber({filter:{}, fromBlock:"latest"}, functio
 		console.log("loi roi"+ error)
 	}else{
 		betRandomNumber = event.returnValues.betNumber;
-		console.log("hehe"+event.returnValues.betNumber+"thanh cong roi")
+		//console.log("hehe"+event.returnValues.betNumber+"thanh cong roi")
 	}
 })
 
@@ -649,19 +418,16 @@ var contract_MM = new web3.eth.Contract(abi,addressSM);
 
 sender = "0x91aAA108997BA2540C9aF1c67d4dccB48Fb34f06";
 const initBetPlay = async (round)=>{
-    console.log("fddddd2");
 	round.state_game  = 1;
 	stateGameCurrent = round.state_game;
 	round.save((eSave)=>{
 		io.sockets.emit("server-send-current-round", JSON.stringify(round));
 	})
-	console.log("ooo");
    	var data = await contract_MM.methods.play().send({
         from: sender,
         gas: 72000
     });
 	round.result = betRandomNumber;
-	console.log("????");
 	if(round.result==0){
 		round.dice = Math.floor(Math.random()*9)+1;
 	}else{
@@ -673,7 +439,4 @@ const initBetPlay = async (round)=>{
 		io.sockets.emit("server-send-current-round", JSON.stringify(round));
 	});
 	setTimeout(()=>{createNewRound();}, 5000)
-    console.log("fdddddeeee==hoanthanh");
 }   
-//initBetPlay();
-
