@@ -1,6 +1,7 @@
 const User = require("../models/user");
 const UserRound = require("../models/UserRound");
 const Round = require("../models/Round");
+const jwt = require("jsonwebtoken")
 const Web3 = require('web3');
 var moment = require('moment');
 const web3user = new Web3("https://polygon-mumbai.g.alchemy.com/v2/vdDFGGiobeIX1sP8w7cPnMWzzlm1dGrG");
@@ -295,8 +296,21 @@ const userController = {
                         message: 'user not found, with the given email!',
                     }))
         }  
-        console.log(user+"hmm");
-        res.send(JSON.stringify(user))
+		const token = jwt.sign({userId: user._id}, process.env.JWT_SECRET, {expiresIn:'1d'});
+        
+		const userInfo = {
+			_id: user._id,
+			name: user.name,
+			email: user.email,
+			win: user.win,
+			lose: user.lose,
+			profit: user.profit,
+			addresswallet: user.addresswallet,
+			lostmoney: user.lostmoney,
+			token: token
+		}		
+		//res.json(userInfo);
+        res.send(JSON.stringify(userInfo))
     },
 
 
@@ -361,6 +375,52 @@ const userController = {
         let result = await contract_MMUser.methods.balanceOf(addressSmartContract).call();
         res.send(web3user.utils.fromWei(result, "ether"))
         // console.log(web3user.utils.fromWei(result, "ether"));
-    }
+    },
+	increase_win: async(req,res)=>{
+		const {user} = req;
+		const {money} = req.body;
+		let win = user.win + 1;
+		let profit = user.profit + money;
+		try {
+			const exp = await  User.findByIdAndUpdate(
+				user._id,
+				{
+				  win,
+				  profit
+				},
+				{ new: true, runValidators: true }
+				)
+			res.send(JSON.stringify(exp))
+		} catch (error) {
+			res.send(error);
+		}
+	},
+	increase_lose: async(req,res)=>{
+		const {user} = req;
+		const {money} = req.body;
+		let lose = user.lose + 1;
+		let lostmoney = user.lostmoney + money;
+		try {
+			const exp = await  User.findByIdAndUpdate(
+				user._id,
+				{
+				  lose,
+				  lostmoney
+				},
+				{ new: true, runValidators: true }
+				)
+			res.send(JSON.stringify(exp))
+		} catch (error) {
+			res.send(error);
+		}
+	},
+	getAll: async(req,res)=>{
+		try {
+			const exp = await User.find().sort({"win":-1}).limit(5);
+			res.send(JSON.stringify(exp))
+		} catch (error) {
+			res.send(error);
+		}
+	}
 }
 module.exports = userController;

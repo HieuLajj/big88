@@ -1,4 +1,6 @@
 var express = require("express");
+const dotenv = require("dotenv");
+dotenv.config();
 const cors = require('cors');
 var app = express();
 app.use(express.static("public"));
@@ -28,7 +30,7 @@ app.use(bodyParser.urlencoded({extended: true}))
 // connect moongose
 //hieu mk:12112000
 const mongoose = require('mongoose');
-mongoose.connect('mongodb+srv://hieu:12112000@cluster0.1xwjc.mongodb.net/BIG88?retryWrites=true&w=majority', function(e){
+mongoose.connect(process.env.MONGODB_URL, function(e){
     if(e){
         console.log("moongose error"+ e)
     }else{
@@ -146,9 +148,9 @@ function roundCounter(roundNu){
 					console.log("khong co polygon");
 					round.result = Math.floor(Math.random()*2);
 					if(round.result==0){
-						round.dice = Math.floor(Math.random()*9)+1;
+						round.dice = Math.floor(Math.random()*6)+3;
 					}else{
-						round.dice = Math.floor(Math.random()*9)+10;
+						round.dice = Math.floor(Math.random()*8)+10;
 					}
 					round.state_game  = 1;
 					stateGameCurrent = round.state_game;
@@ -204,8 +206,7 @@ function roundCounter(roundNu){
 		}
 	});
 }
-createNewRound();
-
+//createNewRound();
 const Web3 = require('web3');
 const abi =[
 	{
@@ -429,9 +430,11 @@ const initBetPlay = async (round)=>{
     });
 	round.result = betRandomNumber;
 	if(round.result==0){
-		round.dice = Math.floor(Math.random()*9)+1;
+		// round.dice = Math.floor(Math.random()*9)+1;
+		round.dice = Math.floor(Math.random()*6)+3;
 	}else{
-		round.dice = Math.floor(Math.random()*9)+10;
+		round.dice = Math.floor(Math.random()*8)+10;
+		//round.dice = Math.floor(Math.random()*9)+10;
 	}
 	round.state_game  = 2;
 	stateGameCurrent = round.state_game;

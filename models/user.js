@@ -11,9 +11,19 @@ const userSchema = new mongoose.Schema({
     },
     profit:{
         type: Number,
+        default: 0
+    },
+    lostmoney:{
+        type: Number,
+        default: 0
+    },
+    win:{
+        type: Number,
+        default: 0
     },
     lose:{
         type: Number,
+        default: 0
     },
     addresswallet:{
         type: String,
