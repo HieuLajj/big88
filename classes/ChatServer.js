@@ -9,7 +9,8 @@ module.exports = class ChatServer{
         socket.on('ChatCommunity', function(data){
             const obj = JSON.parse(data);
             var newChat = new Chat({
-                Name:obj.name,
+                userID:obj.id,
+                Name: obj.name,
                 ChatText:obj.textchat,
                 Ngay:Date.now()
             })

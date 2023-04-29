@@ -13,4 +13,6 @@ router.get("/find_round_gamehistory",userController.find_round_gamehistory);
 router.post("/increasewin",isAuth, userController.increase_win);
 router.post("/increaselose", isAuth, userController.increase_lose);
 router.get("/getall", userController.getAll)
+router.post("/update",isAuth,userController.updateProfile)
+router.get("/searchuser", userController.findUser);
 module.exports = router;

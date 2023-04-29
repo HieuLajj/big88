@@ -1,7 +1,10 @@
-const moongose = require("mongoose");
-const chatSchema = new moongose.Schema({
+const mongoose = require("mongoose");
+const chatSchema = new mongoose.Schema({
+    userID:{
+        type: mongoose.Schema.Types.ObjectId, ref: "User" 
+    },
     Name: String,
     ChatText: String,
     Ngay: Date
 });
-module.exports = moongose.model("chat", chatSchema);
+module.exports = mongoose.model("chat", chatSchema);

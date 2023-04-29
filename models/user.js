@@ -1,5 +1,8 @@
 const mongoose = require("mongoose");
 const userSchema = new mongoose.Schema({
+    status:{
+        type: String,
+    },
     email:{
         type: String,
     },
@@ -8,6 +11,7 @@ const userSchema = new mongoose.Schema({
     },
     avatar:{
         type: String,
+        default: "",
     },
     profit:{
         type: Number,
