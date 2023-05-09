@@ -760,9 +760,13 @@ const userController = {
 
 	},
     getBalaceUser: async(req,res)=>{
+      try {
         const {addressSmartContract} = req.body;
         let result = await contract_MMUser.methods.balanceOf(addressSmartContract).call();
         res.send(web3user.utils.fromWei(result, "ether"))
+      } catch (error) {
+        console.log("co loi xay ra khi cap nhap token");
+      }
         // console.log(web3user.utils.fromWei(result, "ether"));
     },
 	increase_win: async(req,res)=>{

@@ -211,7 +211,7 @@ function roundCounter(roundNu){
 		}
 	});
 }
-//createNewRound();
+createNewRound();
 const Web3 = require('web3');
 // const abi =[
 // 	{
@@ -980,7 +980,8 @@ const initBetPlay = async (round)=>{
   setTimeout(()=>{createNewRound();}, 5000)
 }   
 function FormatRound(round){
-  newRound = ({  
+  newRound = new Round({  
+    _id: round._id,
     roundNumber: round.roundNumber,
     small_money: round.small_money,
 		small_players: round.small_players,
@@ -993,5 +994,4 @@ function FormatRound(round){
 		dateCreated : moment(round.dateCreated).format('MM:HH DD-MM-YYYY')
   })
   return JSON.stringify(newRound);
-  
 }
