@@ -1,5 +1,4 @@
 var express = require("express");
-var moment = require('moment');
 const dotenv = require("dotenv");
 dotenv.config();
 const cors = require('cors');
@@ -9,14 +8,8 @@ app.set("view engine", "ejs");
 app.set("views", "./views");
 app.use("/scripts", express.static(__dirname+"/node_modules/web3.js-browser/build/"))
 let ChatServer = require("./classes/ChatServer");
-// const corsOptions = {
-//     optionsSuccessStatus: 200, // For legacy browser support
-//     credentials: true, // This is important.
-//     origin: "https://chalkcoin.io",
-// };
 app.use(cors());
 var bodyParser = require("body-parser");
-//app.use(bodyParser.urlencoded({extended:false}));
 var server = require("http").Server(app);
 var io = require("socket.io")(server,
 	{cors: {
@@ -160,11 +153,12 @@ function roundCounter(roundNu){
 					stateGameCurrent = round.state_game;
 					round.save((eSave)=>{
 						io.sockets.emit("server-send-current-round", JSON.stringify(round));
-						setTimeout(()=>{
+            setTimeout(()=>{
 							round.state_game  = 2;
 							stateGameCurrent = round.state_game;
 							round.save((eSave)=>{
-                io.sockets.emit("server-send-current-round", FormatRound(round));
+                //console.log("2"+JSON.stringify(round));
+                io.sockets.emit("server-send-current-round", JSON.stringify(round));
 								//io.sockets.emit("server-send-current-round", JSON.stringify(round));
 							});
 						}, 10000)
@@ -213,346 +207,218 @@ function roundCounter(roundNu){
 }
 createNewRound();
 const Web3 = require('web3');
-// const abi =[
-// 	{
-// 		"inputs": [
-// 			{
-// 				"internalType": "address",
-// 				"name": "_token",
-// 				"type": "address"
-// 			}
-// 		],
-// 		"stateMutability": "nonpayable",
-// 		"type": "constructor"
-// 	},
-// 	{
-// 		"anonymous": false,
-// 		"inputs": [
-// 			{
-// 				"indexed": false,
-// 				"internalType": "uint256",
-// 				"name": "betNumber",
-// 				"type": "uint256"
-// 			}
-// 		],
-// 		"name": "SMdataBetNumber",
-// 		"type": "event"
-// 	},
-// 	{
-// 		"inputs": [],
-// 		"name": "amount",
-// 		"outputs": [
-// 			{
-// 				"internalType": "uint256",
-// 				"name": "",
-// 				"type": "uint256"
-// 			}
-// 		],
-// 		"stateMutability": "view",
-// 		"type": "function"
-// 	},
-// 	{
-// 		"inputs": [
-// 			{
-// 				"internalType": "uint256",
-// 				"name": "",
-// 				"type": "uint256"
-// 			}
-// 		],
-// 		"name": "arraytest",
-// 		"outputs": [
-// 			{
-// 				"internalType": "uint256",
-// 				"name": "",
-// 				"type": "uint256"
-// 			}
-// 		],
-// 		"stateMutability": "view",
-// 		"type": "function"
-// 	},
-// 	{
-// 		"inputs": [
-// 			{
-// 				"internalType": "uint256",
-// 				"name": "_amountTokenGuess",
-// 				"type": "uint256"
-// 			},
-// 			{
-// 				"internalType": "uint256",
-// 				"name": "_guess",
-// 				"type": "uint256"
-// 			}
-// 		],
-// 		"name": "bet",
-// 		"outputs": [],
-// 		"stateMutability": "nonpayable",
-// 		"type": "function"
-// 	},
-// 	{
-// 		"inputs": [],
-// 		"name": "claim_tokenXU",
-// 		"outputs": [],
-// 		"stateMutability": "nonpayable",
-// 		"type": "function"
-// 	},
-// 	{
-// 		"inputs": [],
-// 		"name": "owner",
-// 		"outputs": [
-// 			{
-// 				"internalType": "address payable",
-// 				"name": "",
-// 				"type": "address"
-// 			}
-// 		],
-// 		"stateMutability": "view",
-// 		"type": "function"
-// 	},
-// 	{
-// 		"inputs": [],
-// 		"name": "play",
-// 		"outputs": [],
-// 		"stateMutability": "nonpayable",
-// 		"type": "function"
-// 	},
-// 	{
-// 		"inputs": [
-// 			{
-// 				"internalType": "address",
-// 				"name": "",
-// 				"type": "address"
-// 			}
-// 		],
-// 		"name": "playerBet",
-// 		"outputs": [
-// 			{
-// 				"internalType": "uint256",
-// 				"name": "amountTokenGuess",
-// 				"type": "uint256"
-// 			},
-// 			{
-// 				"internalType": "uint256",
-// 				"name": "guess",
-// 				"type": "uint256"
-// 			}
-// 		],
-// 		"stateMutability": "view",
-// 		"type": "function"
-// 	},
-// 	{
-// 		"inputs": [],
-// 		"name": "pushArray",
-// 		"outputs": [],
-// 		"stateMutability": "nonpayable",
-// 		"type": "function"
-// 	},
-// 	{
-// 		"inputs": [
-// 			{
-// 				"internalType": "uint256",
-// 				"name": "",
-// 				"type": "uint256"
-// 			}
-// 		],
-// 		"name": "stakerAddressList",
-// 		"outputs": [
-// 			{
-// 				"internalType": "address",
-// 				"name": "",
-// 				"type": "address"
-// 			}
-// 		],
-// 		"stateMutability": "view",
-// 		"type": "function"
-// 	},
-// 	{
-// 		"inputs": [],
-// 		"name": "tokenXU",
-// 		"outputs": [
-// 			{
-// 				"internalType": "contract IERC20",
-// 				"name": "",
-// 				"type": "address"
-// 			}
-// 		],
-// 		"stateMutability": "view",
-// 		"type": "function"
-// 	},
-// 	{
-// 		"inputs": [
-// 			{
-// 				"internalType": "uint256",
-// 				"name": "",
-// 				"type": "uint256"
-// 			}
-// 		],
-// 		"name": "usersClaimed",
-// 		"outputs": [
-// 			{
-// 				"internalType": "address",
-// 				"name": "",
-// 				"type": "address"
-// 			}
-// 		],
-// 		"stateMutability": "view",
-// 		"type": "function"
-// 	},
-// 	{
-// 		"inputs": [],
-// 		"name": "xoaarrya",
-// 		"outputs": [],
-// 		"stateMutability": "nonpayable",
-// 		"type": "function"
-// 	}
-// ]
 const abi = [
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_token",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "nonpayable",
-    "type": "constructor"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "betNumber",
-        "type": "uint256"
-      }
-    ],
-    "name": "SMdataBetNumber",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "winer",
-        "type": "address"
-      }
-    ],
-    "name": "SMdataWin",
-    "type": "event"
-  },
-  {
-    "inputs": [],
-    "name": "amount",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_amountTokenGuess",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_guess",
-        "type": "uint256"
-      }
-    ],
-    "name": "bet",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "owner",
-    "outputs": [
-      {
-        "internalType": "address payable",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "play",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "name": "playerBet",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "amountTokenGuess",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "guess",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "name": "stakerAddressList",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "tokenXU",
-    "outputs": [
-      {
-        "internalType": "contract IERC20",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  }
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_amountTokenGuess",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_guess",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_gameRound",
+				"type": "uint256"
+			}
+		],
+		"name": "bet",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_token",
+				"type": "address"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "address",
+				"name": "buyer",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			}
+		],
+		"name": "Congtien",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "address",
+				"name": "buyer",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			}
+		],
+		"name": "Hoantien",
+		"type": "event"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_gameRound",
+				"type": "uint256"
+			}
+		],
+		"name": "play",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "betNumber",
+				"type": "uint256"
+			}
+		],
+		"name": "SMdataBetNumber",
+		"type": "event"
+	},
+	{
+		"inputs": [],
+		"name": "amount",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_addressToCheck",
+				"type": "address"
+			}
+		],
+		"name": "checkAddress",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "owner",
+		"outputs": [
+			{
+				"internalType": "address payable",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "playerBet",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "amountTokenGuess",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "guess",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "gameRound",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "stakerAddressList",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "tokenXU",
+		"outputs": [
+			{
+				"internalType": "contract IERC20",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	}
 ]
-//const addressSM = "0xAa7D1E308BaA9663588ABd9457fDBf7Fb5482a71";
-const addressSM = "0x658aDef34a44b81185C1cddd228d6357bEa35F4D";
+const addressSM = "0x38d35E1889C2fE4841574b829F88eD260C15b48F";
 var provider = new Web3.providers.WebsocketProvider("wss://polygon-mumbai.g.alchemy.com/v2/vdDFGGiobeIX1sP8w7cPnMWzzlm1dGrG");
 var web3_alchemy = new Web3(provider);
 var contract_Alchemy = new web3_alchemy.eth.Contract(abi,addressSM);
@@ -561,355 +427,374 @@ contract_Alchemy.events.SMdataBetNumber({filter:{}, fromBlock:"latest"}, functio
 		console.log("loi roi"+ error)
 	}else{
 		betRandomNumber = event.returnValues.betNumber;
-		//console.log("hehe"+event.returnValues.betNumber+"thanh cong roi")
+		//console.log("ket qua la"+event.returnValues.betNumber)
 	}
 })
 
-// contract_Alchemy.events.SMdataWin({filter:{}, fromBlock:"latest"}, function(error,event){
-// 	if(error){
-// 		console.log("loi roi"+ error)
-// 	}else{
-// 		event.returnValues.winer
-// 		//console.log("hehe"+event.returnValues.betNumber+"thanh cong roi")
-// 	}
-// })
+contract_Alchemy.events.Congtien({filter:{}, fromBlock:"latest"}, function(error,event){
+	if(error){
+		console.log("loi roi"+ error)
+	}else{
+		//event.returnValues.winer
+		console.log("cong tien"+event.returnValues.buyer.toLowerCase()+"thanh cong roi"+ event.returnValues.amount)
+    let message = ({  
+      address: event.returnValues.buyer.toLowerCase(),
+      amount: event.returnValues.amount/1000000000000000000,
+    })
+    io.sockets.emit("notification_game_cong", JSON.stringify(message));
+	}
+})
+contract_Alchemy.events.Hoantien({filter:{}, fromBlock:"latest"}, function(error,event){
+	if(error){
+		console.log("loi roi"+ error)
+	}else{
+		//event.returnValues.winer
+		console.log("hoan tien"+event.returnValues.buyer.toLowerCase()+"thanh cong roi"+ event.returnValues.amount)
+    let message = ({  
+      address: event.returnValues.buyer.toLowerCase(),
+      amount: event.returnValues.amount/1000000000000000000,
+    })
+    io.sockets.emit("notification_game_hoan", JSON.stringify(message));
+	}
+})
+
 
 
 //naptien
 const abi_ico = [
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "bnb_rate",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "usdt_rate",
-          "type": "uint256"
-        },
-        {
-          "internalType": "address payable",
-          "name": "wallet",
-          "type": "address"
-        },
-        {
-          "internalType": "contract IERC20",
-          "name": "icotoken",
-          "type": "address"
-        }
-      ],
-      "stateMutability": "nonpayable",
-      "type": "constructor"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": false,
-          "internalType": "address",
-          "name": "buyer",
-          "type": "address"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "amount",
-          "type": "uint256"
-        }
-      ],
-      "name": "BuyTokenByBNB",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": false,
-          "internalType": "address",
-          "name": "buyer",
-          "type": "address"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "amount",
-          "type": "uint256"
-        }
-      ],
-      "name": "DrawBNB",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": true,
-          "internalType": "address",
-          "name": "previousOwner",
-          "type": "address"
-        },
-        {
-          "indexed": true,
-          "internalType": "address",
-          "name": "newOwner",
-          "type": "address"
-        }
-      ],
-      "name": "OwnershipTransferred",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "newRate",
-          "type": "uint256"
-        }
-      ],
-      "name": "SetBNBRate",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "newRate",
-          "type": "uint256"
-        }
-      ],
-      "name": "SetUSDTRate",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": false,
-          "internalType": "contract IERC20",
-          "name": "tokenAddress",
-          "type": "address"
-        }
-      ],
-      "name": "SetUSDTToken",
-      "type": "event"
-    },
-    {
-      "inputs": [],
-      "name": "BNB_rate",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "USDT_rate",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "_wallet",
-      "outputs": [
-        {
-          "internalType": "address payable",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "buyTokenByBNB",
-      "outputs": [],
-      "stateMutability": "payable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "USDTAmount",
-          "type": "uint256"
-        }
-      ],
-      "name": "drawBNB",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "BNBAmount",
-          "type": "uint256"
-        }
-      ],
-      "name": "getTokenAmountBNB",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "USDTAmount",
-          "type": "uint256"
-        }
-      ],
-      "name": "getTokenAmountUSDT",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "owner",
-      "outputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "renounceOwnership",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "new_rate",
-          "type": "uint256"
-        }
-      ],
-      "name": "setBNBRate",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "new_rate",
-          "type": "uint256"
-        }
-      ],
-      "name": "setUSDTRate",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "contract IERC20",
-          "name": "token_address",
-          "type": "address"
-        }
-      ],
-      "name": "setUSDTToken",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "token",
-      "outputs": [
-        {
-          "internalType": "contract IERC20",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "newOwner",
-          "type": "address"
-        }
-      ],
-      "name": "transferOwnership",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "usdtToken",
-      "outputs": [
-        {
-          "internalType": "contract IERC20",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "withdraw",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "withdrawErc20",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    }
-  ]
-const address_ico = "0xDb615904BC67E9bF39438b5aB384dC857ABC08f4"
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "bnb_rate",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "usdt_rate",
+				"type": "uint256"
+			},
+			{
+				"internalType": "address payable",
+				"name": "wallet",
+				"type": "address"
+			},
+			{
+				"internalType": "contract IERC20",
+				"name": "icotoken",
+				"type": "address"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "address",
+				"name": "buyer",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			}
+		],
+		"name": "BuyTokenByBNB",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "address",
+				"name": "buyer",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			}
+		],
+		"name": "DrawBNB",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "previousOwner",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "newOwner",
+				"type": "address"
+			}
+		],
+		"name": "OwnershipTransferred",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "newRate",
+				"type": "uint256"
+			}
+		],
+		"name": "SetBNBRate",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "newRate",
+				"type": "uint256"
+			}
+		],
+		"name": "SetUSDTRate",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "contract IERC20",
+				"name": "tokenAddress",
+				"type": "address"
+			}
+		],
+		"name": "SetUSDTToken",
+		"type": "event"
+	},
+	{
+		"inputs": [],
+		"name": "BNB_rate",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "USDT_rate",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "_wallet",
+		"outputs": [
+			{
+				"internalType": "address payable",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "buyTokenByBNB",
+		"outputs": [],
+		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "USDTAmount",
+				"type": "uint256"
+			}
+		],
+		"name": "drawBNB",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "BNBAmount",
+				"type": "uint256"
+			}
+		],
+		"name": "getTokenAmountBNB",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "USDTAmount",
+				"type": "uint256"
+			}
+		],
+		"name": "getTokenAmountUSDT",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "owner",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "renounceOwnership",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "new_rate",
+				"type": "uint256"
+			}
+		],
+		"name": "setBNBRate",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "new_rate",
+				"type": "uint256"
+			}
+		],
+		"name": "setUSDTRate",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "contract IERC20",
+				"name": "token_address",
+				"type": "address"
+			}
+		],
+		"name": "setUSDTToken",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "token",
+		"outputs": [
+			{
+				"internalType": "contract IERC20",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "newOwner",
+				"type": "address"
+			}
+		],
+		"name": "transferOwnership",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "usdtToken",
+		"outputs": [
+			{
+				"internalType": "contract IERC20",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "withdraw",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "withdrawErc20",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	}
+]
+const address_ico = "0xD81b86f4d9dF8FD1822149C8454e11A37807C0Bb"
 var contract_Alchemy_ico = new web3_alchemy.eth.Contract(abi_ico, address_ico);
 contract_Alchemy_ico.events.DrawBNB({filter:{}, fromBlock:"latest"}, function(error,event){
 	if(error){
@@ -919,6 +804,19 @@ contract_Alchemy_ico.events.DrawBNB({filter:{}, fromBlock:"latest"}, function(er
 		console.log(event.returnValues.buyer+"_thanh cong roi_"+event.returnValues.amount)
 		let moneymoubt = event.returnValues.amount/1000000000000000000;
 		transfer_money(moneymoubt,event.returnValues.buyer)
+	}
+})
+contract_Alchemy_ico.events.BuyTokenByBNB({filter:{}, fromBlock:"latest"}, function(error,event){
+	if(error){
+		console.log("loi roi"+ error)
+	}else{
+		
+		let moneymoubt = event.returnValues.amount/1000000000000000000;
+		let message = ({  
+			address: event.returnValues.buyer.toLowerCase(),
+			amount: moneymoubt,
+		})
+		io.sockets.emit("naptien", JSON.stringify(message));
 	}
 })
 
@@ -939,6 +837,12 @@ const transfer_money = async (mount, address_receive)=>{
 	})
 	.then((receipt) => {
 		console.log("thanh cong"+receipt);
+		// rut tien
+		let message = ({  
+			address: address_receive.toLowerCase(),
+			amount: mount*1000,
+		})
+		io.sockets.emit("ruttien", JSON.stringify(message));
 	})
 	.catch((error) => {
 		console.error("that bai"+error);
@@ -955,7 +859,7 @@ const initBetPlay = async (round)=>{
     io.sockets.emit("server-send-current-round", JSON.stringify(round));
   })
   try {
-    var data = await contract_MM.methods.play().send({
+    var data = await contract_MM.methods.play(round.roundNumber).send({
       from: sender,
       gas: 1000000
     });
@@ -974,24 +878,8 @@ const initBetPlay = async (round)=>{
   round.state_game  = 2;
   stateGameCurrent = round.state_game;
   round.save((eSave)=>{
-    // io.sockets.emit("server-send-current-round", JSON.stringify(round));
-    io.sockets.emit("server-send-current-round", FormatRound(round));
+    io.sockets.emit("server-send-current-round", JSON.stringify(round));
   });
   setTimeout(()=>{createNewRound();}, 5000)
 }   
-function FormatRound(round){
-  newRound = new Round({  
-    _id: round._id,
-    roundNumber: round.roundNumber,
-    small_money: round.small_money,
-		small_players: round.small_players,
-		big_money: round.big_money,
-		big_players: round.big_players,
-		counter: round.counter,
-		result: round.result,
-		state_game: round.state_game,
-		dice: round.dice,
-		dateCreated : moment(round.dateCreated).format('MM:HH DD-MM-YYYY')
-  })
-  return JSON.stringify(newRound);
-}
+
