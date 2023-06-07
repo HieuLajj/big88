@@ -4,6 +4,7 @@ const Round = require("../models/Round");
 const jwt = require("jsonwebtoken")
 const Web3 = require('web3');
 var moment = require('moment');
+const cloudinary = require("../helper/imageUpload")
 const web3user = new Web3("https://polygon-mumbai.g.alchemy.com/v2/vdDFGGiobeIX1sP8w7cPnMWzzlm1dGrG");
 // const abi = [
 //     {
@@ -733,19 +734,35 @@ const userController = {
 	find_round: async(req,res)=>{
 		const {userID} = req.body;
 		const finduser = await UserRound.find({"userID":userID}).sort({gameID: -1}).populate("gameID").limit(20);
+		
 		let finduser2 = finduser.map((data)=>{
+			let resultpre = data.gameID.result;
+			let statuslast="null";
+			let moneyafterbetlast;
+			if(resultpre==-2){
+				statuslast = "null";
+			}else{
+				statuslast = (data.bet == data.gameID.result) ? "Win" : "Lose";
+			}
+			if(statuslast == "null"){
+				moneyafterbetlast = 0;
+			}else{
+				moneyafterbetlast = (data.bet == data.gameID.result)? data.moneybet*2 :data.moneybet;
+			}
+
 			return{
                 gameID: data.gameID.roundNumber,
                 transactionID: data.transactionID,
                 moneybet: data.moneybet,
-				status: (data.bet == data.gameID.result) ? "Win" : "Lose",
-				moneyafterbet: (data.bet == data.gameID.result)? data.moneybet*2 :data.moneybet,
+				status: statuslast,
+				moneyafterbet: moneyafterbetlast,
 				bet:(data.bet) ? "Big" : "Small"
             }
 		})
 		res.json(finduser2)
 		//res.send(JSON.stringify(finduser2));
 	},
+	
 	find_round_gamehistory: async(req,res)=>{
 		const finduser = await Round.find().sort({dateCreated: -1}).limit(10);
 		let finduser2  = finduser.map((data)=>{
@@ -846,6 +863,31 @@ const userController = {
 			{ new: true, runValidators: true }
 			)
 			res.send(JSON.stringify(exp));
+		} catch (error) {
+			res.json(error);
+		}
+	},
+
+	updateImage: async(req, res) => {
+		const {user} = req;
+		if (!user)
+		return res
+		  .status(401)
+		  .json({ success: false, message: 'unauthorized access!' });
+
+		try {
+			const result = await cloudinary.uploader.upload(req.file.path,{
+				public_id: `${user._id}_profile`,
+				width: 500,
+				height:500,
+				crop: 'fill'
+			});
+			const exp = await User.findByIdAndUpdate(
+				user._id,
+				{ avatar: result.url },
+				{ new: true, runValidators: true }
+			)
+			res.send(result.url);
 		} catch (error) {
 			res.json(error);
 		}
